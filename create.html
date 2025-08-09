@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register New Admin</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; }
+        .register-form { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #4CAF50; color: white; padding: 10px; border: none; border-radius: 4px; width: 100%; cursor: pointer; }
+        .error { color: red; margin-top: 10px; }
+        .success { color: green; margin-top: 10px; }
+        .day-option { display: inline-block; margin-right: 15px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="register-form">
+        <h2>Register New Admin</h2>
+        
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter username">
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="text" id="email" placeholder="Enter email">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter password (min 8 characters)">
+        </div>
+        
+        <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" placeholder="Confirm password">
+        </div>
+        
+        <div class="form-group">
+            <label>Access Days</label>
+            <div>
+                <div class="day-option"><input type="checkbox" id="day-0" value="0"> Sunday</div>
+                <div class="day-option"><input type="checkbox" id="day-1" value="1" checked> Monday</div>
+                <div class="day-option"><input type="checkbox" id="day-2" value="2" checked> Tuesday</div>
+                <div class="day-option"><input type="checkbox" id="day-3" value="3" checked> Wednesday</div>
+                <div class="day-option"><input type="checkbox" id="day-4" value="4" checked> Thursday</div>
+                <div class="day-option"><input type="checkbox" id="day-5" value="5" checked> Friday</div>
+                <div class="day-option"><input type="checkbox" id="day-6" value="6"> Saturday</div>
+            </div>
+        </div>
+        
+        <button onclick="registerUser()">Register</button>
+        
+        <p id="error-message" class="error"></p>
+        <p id="success-message" class="success"></p>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+      apiKey: "AIzaSyCB_wr4EqhPRzSWQuLgr-eyV9Zisw8_rIs",
+      authDomain: "xr-social-53646.firebaseapp.com",
+      databaseURL: "https://xr-social-53646-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "xr-social-53646",
+      storageBucket: "xr-social-53646.appspot.com",
+      messagingSenderId: "55685443011",
+      appId: "1:55685443011:web:ef0f9de8e329d24d512176"
+    };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        function registerUser() {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+            
+            // Reset messages
+            errorMessage.textContent = '';
+            successMessage.textContent = '';
+            
+            // Validate inputs
+            if (!username || !email || !password || !confirmPassword) {
+                errorMessage.textContent = "All fields are required!";
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                errorMessage.textContent = "Passwords do not match!";
+                return;
+            }
+            
+            if (password.length < 8) {
+                errorMessage.textContent = "Password must be at least 8 characters!";
+                return;
+            }
+            
+            // Get selected days
+            const allowedDays = [];
+            for (let i = 0; i < 7; i++) {
+                if (document.getElementById(`day-${i}`).checked) {
+                    allowedDays.push(i);
+                }
+            }
+            
+            if (allowedDays.length === 0) {
+                errorMessage.textContent = "Please select at least one access day!";
+                return;
+            }
+            
+            // Create user
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    // Save additional user data
+                    return database.ref(`adminUsers/${user.uid}`).set({
+                        username: username,
+                        email: email,
+                        allowedDays: allowedDays,
+                        createdAt: new Date().toISOString(),
+                        accessLevel: "admin"
+                    });
+                })
+                .then(() => {
+                    successMessage.textContent = "User registered successfully!";
+                    // Clear form
+                    document.getElementById('username').value = '';
+                    document.getElementById('email').value = '';
+                    document.getElementById('password').value = '';
+                    document.getElementById('confirm-password').value = '';
+                })
+                .catch((error) => {
+                    errorMessage.textContent = error.message;
+                });
+        }
+    </script>
+</body>
+</html>
