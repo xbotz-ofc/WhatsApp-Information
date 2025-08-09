@@ -7,47 +7,29 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #2ecc71; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; width: 100%; }
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px; }
+        .register-form { background: #f8f9fa; padding: 20px; border-radius: 5px; }
+        input, select { padding: 10px; margin: 8px 0; width: 100%; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 15px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
         .message { margin-top: 15px; padding: 10px; border-radius: 4px; }
         .error { background: #ffebee; color: #c62828; }
         .success { background: #e8f5e9; color: #2e7d32; }
     </style>
 </head>
 <body>
-    <h1>Create Admin Account</h1>
-    
-    <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" placeholder="Enter username">
-    </div>
-    
-    <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Enter password (min 8 characters)">
-    </div>
-    
-    <div class="form-group">
-        <label for="confirm">Confirm Password</label>
-        <input type="password" id="confirm" placeholder="Confirm password">
-    </div>
-    
-    <div class="form-group">
-        <label for="days">Access Duration (days)</label>
+    <div class="register-form">
+        <h2>Create Admin Account</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password (min 8 characters)">
+        <input type="password" id="confirm" placeholder="Confirm Password">
         <select id="days">
-            <option value="1">1 Day</option>
-            <option value="3">3 Days</option>
-            <option value="7" selected>7 Days</option>
-            <option value="30">30 Days</option>
+            <option value="7" selected>7 Days Access</option>
+            <option value="1">1 Day Access</option>
+            <option value="30">30 Days Access</option>
         </select>
+        <button onclick="register()">Register</button>
+        <div id="message" class="message"></div>
     </div>
-    
-    <button onclick="register()">Register Admin</button>
-    
-    <div id="message" class="message"></div>
 
     <script>
         // Konfigurasi Firebase
