@@ -16,11 +16,7 @@
 <body>
     <h1>Visitor Information Tracker</h1>
     <div class="info-card">
-        <p><strong>IP Address:</strong> <span id="ip"></span></p>
-        <p><strong>Country:</strong> <span id="country"></span></p>
-        <p><strong>City:</strong> <span id="city"></span></p>
-        <p><strong>User Agent:</strong> <span id="ua"></span></p>
-        <p><strong>Visit Time:</strong> <span id="time"></span></p>
+        <p><strong>Status:</strong> <span id="status">Mencatat informasi pengunjung...</span></p>
     </div>
 
     <script>
@@ -46,36 +42,28 @@
                 const ipRes = await fetch('https://api.ipify.org?format=json');
                 const ipData = await ipRes.json();
                 const ip = ipData.ip;
-                document.getElementById('ip').textContent = ip;
 
                 // Dapatkan lokasi
                 const locRes = await fetch(`https://ipapi.co/${ip}/json/`);
                 const locData = await locRes.json();
-                document.getElementById('country').textContent = locData.country_name || 'Unknown';
-                document.getElementById('city').textContent = locData.city || 'Unknown';
-
-                // Dapatkan user agent
-                const ua = navigator.userAgent;
-                document.getElementById('ua').textContent = ua;
 
                 // Waktu akses
                 const now = new Date();
-                document.getElementById('time').textContent = now.toLocaleString();
 
                 // Simpan ke database
                 db.ref('visits').push({
                     ip: ip,
                     country: locData.country_name,
                     city: locData.city,
-                    userAgent: ua,
+                    userAgent: navigator.userAgent,
                     timestamp: now.toISOString()
                 });
 
+                document.getElementById('status').textContent = "Informasi pengunjung berhasil dicatat!";
+
             } catch (error) {
                 console.error("Error recording visit:", error);
-                document.getElementById('ip').textContent = "Failed to detect";
-                document.getElementById('country').textContent = "Failed to detect";
-                document.getElementById('city').textContent = "Failed to detect";
+                document.getElementById('status').textContent = "Gagal mencatat informasi pengunjung";
             }
         }
 
