@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; }
+        .login-form { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #4CAF50; color: white; padding: 10px; border: none; border-radius: 4px; width: 100%; cursor: pointer; }
+        .error { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="login-form">
+        <h2>Admin Login</h2>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="text" id="email" placeholder="admin@yourdomain.com">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Your password">
+        </div>
+        <button onclick="login()">Login</button>
+        <p id="error-message" class="error"></p>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+      apiKey: "AIzaSyCB_wr4EqhPRzSWQuLgr-eyV9Zisw8_rIs",
+      authDomain: "xr-social-53646.firebaseapp.com",
+      databaseURL: "https://xr-social-53646-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "xr-social-53646",
+      storageBucket: "xr-social-53646.appspot.com",
+      messagingSenderId: "55685443011",
+      appId: "1:55685443011:web:ef0f9de8e329d24d512176"
+    };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+
+            // Basic input validation
+            if (!email || !password) {
+                errorMessage.textContent = "Email and password are required";
+                return;
+            }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Check access days
+                    const user = userCredential.user;
+                    return database.ref(`adminUsers/${user.uid}/allowedDays`).once('value');
+                })
+                .then((snapshot) => {
+                    const allowedDays = snapshot.val();
+                    const today = new Date().getDay();
+                    
+                    if (allowedDays && allowedDays.includes(today)) {
+                        window.location.href = "admin_panel.html";
+                    } else {
+                        auth.signOut();
+                        document.getElementById('error-message').textContent = 
+                            "Your account is not permitted to access on this day";
+                    }
+                })
+                .catch((error) => {
+                    document.getElementById('error-message').textContent = error.message;
+                });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .user-item { margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 4px; }
+        .day-option { display: inline-block; margin-right: 15px; }
+        button { padding: 5px 10px; margin-right: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Admin Panel</h1>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <div class="card">
+        <h2>User Management</h2>
+        <div id="user-list"></div>
+    </div>
+
+    <div class="card">
+        <h2>Visitor Logs</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>IP Address</th>
+                    <th>Location</th>
+                    <th>User Agent</th>
+                </tr>
+            </thead>
+            <tbody id="visitor-data"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+      apiKey: "AIzaSyCB_wr4EqhPRzSWQuLgr-eyV9Zisw8_rIs",
+      authDomain: "xr-social-53646.firebaseapp.com",
+      databaseURL: "https://xr-social-53646-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "xr-social-53646",
+      storageBucket: "xr-social-53646.appspot.com",
+      messagingSenderId: "55685443011",
+      appId: "1:55685443011:web:ef0f9de8e329d24d512176"
+    };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "admin_login.html";
+            } else {
+                loadData();
+            }
+        });
+
+        function loadData() {
+            // Load user list
+            database.ref('adminUsers').on('value', (snapshot) => {
+                const users = snapshot.val();
+                const userList = document.getElementById('user-list');
+                userList.innerHTML = '';
+                
+                if (users) {
+                    Object.keys(users).forEach((uid) => {
+                        const user = users[uid];
+                        const userDiv = document.createElement('div');
+                        userDiv.className = 'user-item';
+                        userDiv.innerHTML = `
+                            <h3>${user.username} (${user.accessLevel || 'admin'})</h3>
+                            <p>Allowed Days: ${formatDays(user.allowedDays)}</p>
+                            <div id="edit-${uid}" style="display: none; margin-top: 10px;">
+                                ${renderDayOptions(uid, user.allowedDays)}
+                                <button onclick="saveAccessDays('${uid}')">Save</button>
+                            </div>
+                            <button onclick="toggleEdit('${uid}')">Edit Access</button>
+                        `;
+                        userList.appendChild(userDiv);
+                    });
+                }
+            });
+
+            // Load visitor logs
+            database.ref('visitors').on('value', (snapshot) => {
+                const visitors = snapshot.val();
+                const tbody = document.getElementById('visitor-data');
+                tbody.innerHTML = '';
+                
+                if (visitors) {
+                    Object.keys(visitors).forEach((key) => {
+                        const visit = visitors[key];
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${new Date(visit.timestamp).toLocaleString()}</td>
+                            <td>${visit.ip}</td>
+                            <td>${visit.city || 'Unknown'}, ${visit.country || 'Unknown'}</td>
+                            <td>${visit.userAgent}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            });
+        }
+
+        function formatDays(days) {
+            if (!days) return "Not set";
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            return days.map(d => dayNames[d]).join(', ');
+        }
+
+        function renderDayOptions(uid, allowedDays = [1,2,3,4,5]) {
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            let html = '';
+            
+            for (let i = 0; i < 7; i++) {
+                html += `
+                    <div class="day-option">
+                        <input type="checkbox" id="day-${uid}-${i}" value="${i}" 
+                            ${allowedDays.includes(i) ? 'checked' : ''}>
+                        <label for="day-${uid}-${i}">${dayNames[i]}</label>
+                    </div>
+                `;
+            }
+            return html;
+        }
+
+        function toggleEdit(uid) {
+            const editDiv = document.getElementById(`edit-${uid}`);
+            editDiv.style.display = editDiv.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function saveAccessDays(uid) {
+            const checkboxes = document.querySelectorAll(`#edit-${uid} input[type="checkbox"]:checked`);
+            const allowedDays = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            
+            database.ref(`adminUsers/${uid}/allowedDays`).set(allowedDays)
+                .then(() => {
+                    alert('Access days updated successfully!');
+                    toggleEdit(uid);
+                });
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.href = "admin_login.html";
+            });
+        }
+    </script>
+</body>
+</html>
