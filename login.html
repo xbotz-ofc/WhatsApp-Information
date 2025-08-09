@@ -14,13 +14,14 @@
             background-color: #000;
             color: #fff;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            min-height: 100vh;
         }
         
         /* Purple neon grid animation */
         body::before {
             content: "";
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -98,6 +99,7 @@
             width: 100%;
             font-weight: bold;
             transition: all 0.3s;
+            margin: 5px 0;
         }
         
         button:hover {
@@ -117,6 +119,7 @@
             margin: 10px 0; 
             border-radius: 10px; 
             border: 1px solid #8a2be2;
+            position: relative;
         }
         
         #dataView { 
@@ -129,6 +132,61 @@
         
         strong {
             color: #8a2be2;
+        }
+        
+        .checkbox {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            accent-color: #8a2be2;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .action-buttons button {
+            width: auto;
+            flex: 1;
+        }
+        
+        #visitsList {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        /* Scrollbar styling */
+        #visitsList::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #visitsList::-webkit-scrollbar-track {
+            background: rgba(30, 30, 30, 0.5);
+            border-radius: 10px;
+        }
+        
+        #visitsList::-webkit-scrollbar-thumb {
+            background: #8a2be2;
+            border-radius: 10px;
+        }
+        
+        #visitsList::-webkit-scrollbar-thumb:hover {
+            background: #9932cc;
+        }
+        
+        .logout-btn {
+            background: #ff5555 !important;
+            margin-top: 20px;
+        }
+        
+        .logout-btn:hover {
+            background: #ff3333 !important;
+            box-shadow: 0 0 10px #ff5555 !important;
         }
     </style>
 </head>
@@ -143,7 +201,15 @@
     
     <div id="dataView">
         <h2>Visitor Records</h2>
+        
+        <div class="action-buttons">
+            <button onclick="deleteSelected()">Delete Selected</button>
+            <button onclick="deleteAll()" style="background: #ff5555;">Delete All</button>
+        </div>
+        
         <div id="visitsList"></div>
+        
+        <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
     <script>
@@ -208,6 +274,7 @@
                         const card = document.createElement('div');
                         card.className = 'visitor-card';
                         card.innerHTML = `
+                            <input type="checkbox" class="checkbox" data-key="${key}">
                             <p><strong>IP:</strong> ${visit.ip}</p>
                             <p><strong>Location:</strong> ${visit.city}, ${visit.country}</p>
                             <p><strong>User Agent:</strong> ${visit.userAgent}</p>
@@ -219,6 +286,40 @@
                     container.innerHTML = "<p>No visitor data available</p>";
                 }
             });
+        }
+        
+        // Fungsi untuk logout
+        function logout() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('dataView').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').textContent = '';
+        }
+        
+        // Fungsi untuk menghapus data terpilih
+        function deleteSelected() {
+            const checkboxes = document.querySelectorAll('.checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('Please select at least one record to delete');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to delete ${checkboxes.length} selected records?`)) {
+                checkboxes.forEach(checkbox => {
+                    const key = checkbox.getAttribute('data-key');
+                    db.ref('visits').child(key).remove();
+                });
+            }
+        }
+        
+        // Fungsi untuk menghapus semua data
+        function deleteAll() {
+            if (confirm('Are you sure you want to delete ALL records? This cannot be undone!')) {
+                db.ref('visits').remove()
+                    .then(() => alert('All records have been deleted'))
+                    .catch(error => alert('Error deleting records: ' + error.message));
+            }
         }
     </script>
 </body>
