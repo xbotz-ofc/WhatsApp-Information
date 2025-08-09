@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Tracker</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .info-card { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        h1 { color: #2c3e50; }
+        p { margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <h1>Visitor Information Tracker</h1>
+    <div class="info-card">
+        <p><strong>IP Address:</strong> <span id="ip"></span></p>
+        <p><strong>Country:</strong> <span id="country"></span></p>
+        <p><strong>City:</strong> <span id="city"></span></p>
+        <p><strong>User Agent:</strong> <span id="ua"></span></p>
+        <p><strong>Visit Time:</strong> <span id="time"></span></p>
+    </div>
+
+    <script>
+        // Konfigurasi Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB_wr4EqhPRzSWQuLgr-eyV9Zisw8_rIs",
+            authDomain: "xr-social-53646.firebaseapp.com",
+            databaseURL: "https://xr-social-53646-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "xr-social-53646",
+            storageBucket: "xr-social-53646.appspot.com",
+            messagingSenderId: "55685443011",
+            appId: "1:55685443011:web:ef0f9de8e329d24d512176"
+        };
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Fungsi untuk mencatat data pengunjung
+        async function recordVisit() {
+            try {
+                // Dapatkan IP address
+                const ipRes = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipRes.json();
+                const ip = ipData.ip;
+                document.getElementById('ip').textContent = ip;
+
+                // Dapatkan lokasi
+                const locRes = await fetch(`https://ipapi.co/${ip}/json/`);
+                const locData = await locRes.json();
+                document.getElementById('country').textContent = locData.country_name || 'Unknown';
+                document.getElementById('city').textContent = locData.city || 'Unknown';
+
+                // Dapatkan user agent
+                const ua = navigator.userAgent;
+                document.getElementById('ua').textContent = ua;
+
+                // Waktu akses
+                const now = new Date();
+                document.getElementById('time').textContent = now.toLocaleString();
+
+                // Simpan ke database
+                db.ref('visits').push({
+                    ip: ip,
+                    country: locData.country_name,
+                    city: locData.city,
+                    userAgent: ua,
+                    timestamp: now.toISOString()
+                });
+
+            } catch (error) {
+                console.error("Error recording visit:", error);
+                document.getElementById('ip').textContent = "Failed to detect";
+                document.getElementById('country').textContent = "Failed to detect";
+                document.getElementById('city').textContent = "Failed to detect";
+            }
+        }
+
+        // Jalankan saat halaman dimuat
+        window.onload = recordVisit;
+    </script>
+</body>
+</html>

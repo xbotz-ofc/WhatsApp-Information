@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Data Viewer</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .login-form, .data-container { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        input { padding: 10px; margin: 8px 0; width: 250px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .visit-card { background: white; padding: 15px; margin: 10px 0; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .error { color: #e74c3c; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>Visitor Data Access</h1>
+    
+    <div class="login-form" id="loginForm">
+        <h3>Admin Login Required</h3>
+        <input type="text" id="username" placeholder="Username"><br>
+        <input type="password" id="password" placeholder="Password"><br>
+        <button onclick="login()">Login</button>
+        <p id="loginError" class="error"></p>
+    </div>
+    
+    <div class="data-container hidden" id="dataView">
+        <h2>Visitor Records</h2>
+        <div id="visitsList"></div>
+    </div>
+
+    <script>
+        // Konfigurasi Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCB_wr4EqhPRzSWQuLgr-eyV9Zisw8_rIs",
+            authDomain: "xr-social-53646.firebaseapp.com",
+            databaseURL: "https://xr-social-53646-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "xr-social-53646",
+            storageBucket: "xr-social-53646.appspot.com",
+            messagingSenderId: "55685443011",
+            appId: "1:55685443011:web:ef0f9de8e329d24d512176"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Fungsi login
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('loginError');
+            
+            if (!username || !password) {
+                errorMsg.textContent = "Username and password required!";
+                return;
+            }
+            
+            // Verifikasi admin (sederhana)
+            db.ref('adminAccounts').orderByChild('username').equalTo(username).once('value')
+                .then(snapshot => {
+                    const accounts = snapshot.val();
+                    if (accounts) {
+                        const accountId = Object.keys(accounts)[0];
+                        const account = accounts[accountId];
+                        
+                        // Verifikasi password
+                        if (account.password === password) {
+                            // Tampilkan data
+                            document.getElementById('loginForm').classList.add('hidden');
+                            document.getElementById('dataView').classList.remove('hidden');
+                            loadVisitorData();
+                        } else {
+                            errorMsg.textContent = "Invalid password!";
+                        }
+                    } else {
+                        errorMsg.textContent = "Account not found!";
+                    }
+                });
+        }
+
+        // Fungsi untuk memuat data pengunjung
+        function loadVisitorData() {
+            db.ref('visits').on('value', (snapshot) => {
+                const visits = snapshot.val();
+                const container = document.getElementById('visitsList');
+                container.innerHTML = '';
+                
+                if (visits) {
+                    Object.keys(visits).forEach(key => {
+                        const visit = visits[key];
+                        const card = document.createElement('div');
+                        card.className = 'visit-card';
+                        card.innerHTML = `
+                            <p><strong>IP:</strong> ${visit.ip}</p>
+                            <p><strong>Location:</strong> ${visit.city}, ${visit.country}</p>
+                            <p><strong>User Agent:</strong> ${visit.userAgent}</p>
+                            <p><strong>Time:</strong> ${new Date(visit.timestamp).toLocaleString()}</p>
+                        `;
+                        container.appendChild(card);
+                    });
+                } else {
+                    container.innerHTML = "<p>No visitor data available</p>";
+                }
+            });
+        }
+    </script>
+</body>
+</html>
