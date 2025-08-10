@@ -3,32 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Registration</title>
+    <title>Admin Management</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px; }
-        .register-form { background: #f8f9fa; padding: 20px; border-radius: 5px; }
-        input, select { padding: 10px; margin: 8px 0; width: 100%; border: 1px solid #ddd; border-radius: 4px; }
-        button { padding: 10px 15px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
-        .message { margin-top: 15px; padding: 10px; border-radius: 4px; }
-        .error { background: #ffebee; color: #c62828; }
-        .success { background: #e8f5e9; color: #2e7d32; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .panel {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button.danger {
+            background-color: #e74c3c;
+        }
+        button.danger:hover {
+            background-color: #c0392b;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .admin-list {
+            margin-top: 20px;
+        }
+        .admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .admin-info {
+            flex: 1;
+        }
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .days-input {
+            width: 60px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="register-form">
-        <h2>Create Admin Account</h2>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password (min 8 characters)">
-        <input type="password" id="confirm" placeholder="Confirm Password">
-        <select id="days">
-            <option value="7" selected>7 Days Access</option>
-            <option value="1">1 Day Access</option>
-            <option value="30">30 Days Access</option>
-        </select>
-        <button onclick="register()">Register</button>
-        <div id="message" class="message"></div>
+    <div class="container">
+        <div class="panel">
+            <h2>Create New Admin Account</h2>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter password (min 8 characters)">
+            </div>
+            <div class="form-group">
+                <label for="confirm">Confirm Password</label>
+                <input type="password" id="confirm" placeholder="Confirm password">
+            </div>
+            <div class="form-group">
+                <label for="days">Access Duration (days)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="days" class="days-input" min="1" value="7">
+                    <button onclick="register()">Register Admin</button>
+                </div>
+            </div>
+            <div id="register-message" class="message"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Manage Existing Admins</h2>
+            <div class="admin-list" id="adminList">
+                <p>Loading admin accounts...</p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -43,59 +154,147 @@
             appId: "1:55685443011:web:ef0f9de8e329d24d512176"
         };
 
+        // Inisialisasi Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // Fungsi untuk mendaftarkan admin baru
         function register() {
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const confirm = document.getElementById('confirm').value;
             const days = document.getElementById('days').value;
-            const msg = document.getElementById('message');
+            const msg = document.getElementById('register-message');
             
-            // Validasi
-            if (!username || !password || !confirm) {
-                showMessage("All fields are required!", "error");
+            // Validasi input
+            if (!username || !password || !confirm || !days) {
+                showMessage(msg, "All fields are required!", "error");
                 return;
             }
             
             if (password.length < 8) {
-                showMessage("Password must be at least 8 characters!", "error");
+                showMessage(msg, "Password must be at least 8 characters!", "error");
                 return;
             }
             
             if (password !== confirm) {
-                showMessage("Passwords do not match!", "error");
+                showMessage(msg, "Passwords do not match!", "error");
                 return;
             }
             
-            // Buat akun admin
+            if (days < 1) {
+                showMessage(msg, "Access duration must be at least 1 day!", "error");
+                return;
+            }
+            
+            // Buat objek admin baru
             const adminData = {
                 username: username,
                 password: password,
                 createdAt: new Date().toISOString(),
-                validDays: parseInt(days)
+                validDays: parseInt(days),
+                isActive: true
             };
             
             // Simpan ke database
             db.ref('adminAccounts').push(adminData)
                 .then(() => {
-                    showMessage("Admin account created successfully!", "success");
+                    showMessage(msg, "Admin account created successfully!", "success");
                     // Kosongkan form
                     document.getElementById('username').value = '';
                     document.getElementById('password').value = '';
                     document.getElementById('confirm').value = '';
+                    document.getElementById('days').value = '7';
+                    
+                    // Refresh daftar admin
+                    loadAdminAccounts();
                 })
                 .catch(error => {
-                    showMessage("Error: " + error.message, "error");
+                    showMessage(msg, "Error: " + error.message, "error");
                 });
         }
-        
-        function showMessage(text, type) {
-            const msg = document.getElementById('message');
-            msg.textContent = text;
-            msg.className = "message " + type;
+
+        // Fungsi untuk memuat daftar admin
+        function loadAdminAccounts() {
+            db.ref('adminAccounts').once('value')
+                .then(snapshot => {
+                    const admins = snapshot.val();
+                    const container = document.getElementById('adminList');
+                    
+                    if (admins) {
+                        container.innerHTML = '';
+                        
+                        Object.keys(admins).forEach(key => {
+                            const admin = admins[key];
+                            const createdDate = new Date(admin.createdAt);
+                            const expiryDate = new Date(createdDate);
+                            expiryDate.setDate(expiryDate.getDate() + admin.validDays);
+                            
+                            const adminItem = document.createElement('div');
+                            adminItem.className = 'admin-item';
+                            adminItem.innerHTML = `
+                                <div class="admin-info">
+                                    <strong>${admin.username}</strong>
+                                    <div style="font-size: 0.9em; color: #666;">
+                                        Created: ${createdDate.toLocaleDateString()} | 
+                                        Expires: ${expiryDate.toLocaleDateString()} |
+                                        Days: ${admin.validDays}
+                                    </div>
+                                </div>
+                                <div class="admin-actions">
+                                    <button onclick="updateAdminDays('${key}', ${admin.validDays})">Update Days</button>
+                                    <button class="danger" onclick="deleteAdmin('${key}')">Delete</button>
+                                </div>
+                            `;
+                            container.appendChild(adminItem);
+                        });
+                    } else {
+                        container.innerHTML = "<p>No admin accounts found</p>";
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('adminList').innerHTML = `<p class="error">Error loading admin accounts: ${error.message}</p>`;
+                });
         }
+
+        // Fungsi untuk memperbarui hari akses admin
+        function updateAdminDays(adminId, currentDays) {
+            const newDays = prompt("Enter new access duration (days):", currentDays);
+            
+            if (newDays && !isNaN(newDays) && newDays > 0) {
+                db.ref(`adminAccounts/${adminId}/validDays`).set(parseInt(newDays))
+                    .then(() => {
+                        alert("Access duration updated successfully!");
+                        loadAdminAccounts();
+                    })
+                    .catch(error => {
+                        alert("Error updating access duration: " + error.message);
+                    });
+            }
+        }
+
+        // Fungsi untuk menghapus admin
+        function deleteAdmin(adminId) {
+            if (confirm("Are you sure you want to delete this admin account?")) {
+                db.ref(`adminAccounts/${adminId}`).remove()
+                    .then(() => {
+                        alert("Admin account deleted successfully!");
+                        loadAdminAccounts();
+                    })
+                    .catch(error => {
+                        alert("Error deleting admin account: " + error.message);
+                    });
+            }
+        }
+
+        // Fungsi untuk menampilkan pesan
+        function showMessage(element, text, type) {
+            element.textContent = text;
+            element.className = "message " + type;
+        }
+
+        // Muat daftar admin saat halaman dimuat
+        window.onload = loadAdminAccounts;
     </script>
 </body>
 </html>
