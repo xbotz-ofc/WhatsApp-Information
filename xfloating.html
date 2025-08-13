@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Xyaa Tools - Floating Ad</title>
+    <style>
+        #xyaa-floating-ad {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 100px;
+            height: 50px;
+            background-color: #FF5722;
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #xyaa-floating-ad:hover {
+            background-color: #E64A19;
+            transform: scale(1.05);
+        }
+    </style>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+    <!-- Floating Ad Element -->
+    <div id="xyaa-floating-ad" onclick="window.open('https://xyatools.com', '_blank')">
+        Xyaa Tools
+    </div>
+
+    <script>
+        const firebaseConfig = {
+      apiKey: "AIzaSyCB_wr4EqhPRzSWQuLgr-eyV9Zisw8_rIs",
+      authDomain: "xr-social-53646.firebaseapp.com",
+      databaseURL: "https://xr-social-53646-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "xr-social-53646",
+      storageBucket: "xr-social-53646.appspot.com",
+      messagingSenderId: "55685443011",
+      appId: "1:55685443011:web:ef0f9de8e329d24d512176"
+    };
+        
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Referensi ke database
+        const adSettingsRef = database.ref('adSettings');
+        const ipTrackingRef = database.ref('ipTracking');
+        
+        // Mendapatkan IP pengguna
+        async function getUserIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                console.error("Error getting IP:", error);
+                return null;
+            }
+        }
+        
+        // Fungsi untuk mengontrol tampilan ad
+        async function updateAdVisibility() {
+            const userIP = await getUserIP();
+            if (!userIP) return;
+            
+            // Cek status global
+            adSettingsRef.child('globalEnabled').on('value', (globalSnapshot) => {
+                const globalEnabled = globalSnapshot.val();
+                
+                // Cek status per IP
+                ipTrackingRef.child(userIP).on('value', (ipSnapshot) => {
+                    const ipData = ipSnapshot.val();
+                    const adElement = document.getElementById('xyaa-floating-ad');
+                    
+                    // Jika global disabled atau IP khusus disabled
+                    if (globalEnabled === false || (ipData && ipData.adEnabled === false)) {
+                        adElement.style.display = 'none';
+                    } else {
+                        adElement.style.display = 'flex';
+                    }
+                });
+            });
+            
+            // Simpan data pengunjung
+            ipTrackingRef.child(userIP).once('value', (snapshot) => {
+                const now = new Date().toISOString();
+                if (!snapshot.exists()) {
+                    // IP baru
+                    ipTrackingRef.child(userIP).set({
+                        adEnabled: true,
+                        firstSeen: now,
+                        lastSeen: now,
+                        visitCount: 1
+                    });
+                } else {
+                    // Update IP yang sudah ada
+                    const currentData = snapshot.val();
+                    ipTrackingRef.child(userIP).update({
+                        lastSeen: now,
+                        visitCount: (currentData.visitCount || 0) + 1
+                    });
+                }
+            });
+        }
+        
+        // Panggil fungsi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', updateAdVisibility);
+        
+        // Refresh setiap 1 menit
+        setInterval(updateAdVisibility, 60000);
+    </script>
+</body>
+</html>
