@@ -7,209 +7,240 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        html, body {
+            height: 100%;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+        }
+        body {
+            font-family: "Inter", Arial, sans-serif;
+            background: #000;
             color: #fff;
-            position: relative;
-            overflow-x: hidden;
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            position: relative;
         }
-        
-        /* Video background */
-        #video-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -2;
+        /* Login and table UI */
+        .login-form, .visitor-list-wrap {
+            background: rgba(24, 24, 38, 0.22);
+            backdrop-filter: blur(16px);
+            border: 1.5px solid rgba(138,43,226,0.28);
+            border-radius: 22px;
+            box-shadow: 0 4px 40px 0 rgba(138,43,226,0.20);
+            margin: 50px auto 0;
+            max-width: 95vw;
         }
-        
-        /* Overlay for better readability */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: -1;
+        .login-form {
+            padding: 32px 24px 28px 24px;
+            max-width: 350px;
+            margin-top: 18vh;
         }
-        
-        /* Transparent boxes with neon border */
-        .login-form, .visitor-card {
-            background: rgba(20, 20, 20, 0.4);
-            backdrop-filter: blur(10px);
-            border: 1px solid #8a2be2;
-            box-shadow: 0 0 15px rgba(138, 43, 226, 0.7),
-                        0 0 30px rgba(138, 43, 226, 0.5),
-                        0 0 45px rgba(138, 43, 226, 0.3);
-            animation: neonGlow 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes neonGlow {
-            from {
-                box-shadow: 0 0 10px rgba(138, 43, 226, 0.7), 
-                            0 0 20px rgba(138, 43, 226, 0.5),
-                            0 0 30px rgba(138, 43, 226, 0.3);
-            }
-            to {
-                box-shadow: 0 0 15px rgba(138, 43, 226, 0.7), 
-                            0 0 30px rgba(138, 43, 226, 0.5),
-                            0 0 45px rgba(138, 43, 226, 0.3);
-            }
-        }
-        
-        .login-form { 
-            padding: 20px; 
-            border-radius: 10px;
-            max-width: 400px; 
-            margin: 50px auto;
-        }
-        
         h2 {
-            color: #8a2be2;
+            color: #b48ffe;
             text-align: center;
-            text-shadow: 0 0 5px #8a2be2;
+            text-shadow: 0 0 8px #8a2be2bb;
+            margin-bottom: 20px;
+            letter-spacing: 1.5px;
+            font-weight: 700;
         }
-        
-        input { 
-            padding: 10px; 
-            margin: 8px 0; 
-            width: 100%; 
-            background: rgba(30, 30, 30, 0.6);
+        input {
+            padding: 11px 12px;
+            margin: 10px 0;
+            background: rgba(30, 30, 30, 0.65);
             border: 1px solid #8a2be2;
-            border-radius: 4px; 
-            color: white;
+            border-radius: 5px;
+            color: #fff;
+            width: 100%;
+            font-size: 1em;
+            outline: none;
+            transition: box-shadow 0.2s;
         }
-        
-        button { 
-            padding: 10px 15px; 
-            background: #8a2be2; 
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
-            cursor: pointer; 
+        input:focus { box-shadow: 0 0 7px #8a2be2; }
+        button {
+            padding: 12px 0;
+            background: linear-gradient(90deg, #8a2be2 60%, #7e51ff 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
             width: 100%;
             font-weight: bold;
+            font-size: 1em;
+            margin: 8px 0;
+            letter-spacing: 0.5px;
             transition: all 0.3s;
-            margin: 5px 0;
         }
-        
         button:hover {
-            background: #9932cc;
-            box-shadow: 0 0 10px #8a2be2;
+            background: linear-gradient(90deg, #9932cc 40%, #8a2be2 100%);
+            box-shadow: 0 0 12px #8a2be2;
         }
-        
-        .error { 
-            color: #ff5555; 
-            margin-top: 10px; 
+        .error {
+            color: #ff595e;
+            margin-top: 13px;
             text-align: center;
+            font-weight: 500;
+            min-height: 18px;
+            letter-spacing: 0.4px;
         }
-        
-        .visitor-card { 
-            padding: 15px; 
-            margin: 10px 0; 
-            border-radius: 10px; 
-            position: relative;
+        .visitor-list-wrap {
+            max-width: 450px;
+            margin-top: 40px;
+            padding: 18px 3vw 20px 3vw;
         }
-        
-        #dataView { 
-            display: none; 
-            margin-top: 20px; 
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
+        .visitor-list-title {
+            margin-bottom: 12px;
+            text-align: center;
+            font-size: 1.35em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #c6b6ff;
         }
-        
-        strong {
-            color: #8a2be2;
-        }
-        
-        .checkbox {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            accent-color: #8a2be2;
-            width: 18px;
-            height: 18px;
-        }
-        
         .action-buttons {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 12px;
+            margin-bottom: 12px;
+            justify-content: center;
         }
-        
         .action-buttons button {
             width: auto;
-            flex: 1;
+            min-width: 100px;
+            font-size: 0.98em;
         }
-        
-        #visitsList {
-            max-height: 70vh;
+        .logout-btn {
+            background: linear-gradient(90deg, #ff5555 70%, #b81438 100%) !important;
+            margin-top: 30px;
+            box-shadow: 0 0 10px #ff555555;
+        }
+        .logout-btn:hover {
+            background: linear-gradient(90deg, #ff3333 60%, #ff5555 100%) !important;
+            box-shadow: 0 0 16px #ff5555cc !important;
+        }
+        /* Box info card style */
+        .visitor-card {
+            background: rgba(20, 20, 40, 0.8);
+            border-radius: 12px;
+            border: 1.5px solid #8a2be233;
+            box-shadow: 0 1px 8px #8a2be21f;
+            margin-bottom: 16px;
+            padding: 16px 13px 10px 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            position: relative;
+            transition: background 0.18s;
+        }
+        .visitor-card:last-child {
+            margin-bottom: 0;
+        }
+        .visitor-card .checkbox {
+            position: absolute;
+            top: 13px;
+            right: 13px;
+            width: 18px;
+            height: 18px;
+            accent-color: #8a2be2;
+        }
+        .visitor-card .info-row {
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+            margin: 0;
+        }
+        .visitor-card .label {
+            min-width: 80px;
+            color: #b48ffe;
+            font-weight: 600;
+        }
+        .visitor-card .value {
+            color: #ece6ff;
+            word-break: break-all;
+            margin-left: 10px;
+        }
+        .visitor-card .no {
+            color: #8a2be2;
+            font-weight: bold;
+            font-size: 1.08em;
+            margin-right: 13px;
+        }
+        .no-data-row {
+            color: #b48ffe;
+            text-align: center;
+            margin: 36px 0 8px 0;
+            font-weight: 600;
+        }
+        .visitor-list {
+            max-height: 65vh;
             overflow-y: auto;
-            padding-right: 10px;
+            margin-bottom: 5px;
         }
-        
-        /* Scrollbar styling */
-        #visitsList::-webkit-scrollbar {
-            width: 8px;
+        .visitor-list::-webkit-scrollbar {
+            width: 7px;
         }
-        
-        #visitsList::-webkit-scrollbar-track {
-            background: rgba(30, 30, 30, 0.5);
-            border-radius: 10px;
-        }
-        
-        #visitsList::-webkit-scrollbar-thumb {
+        .visitor-list::-webkit-scrollbar-thumb {
             background: #8a2be2;
             border-radius: 10px;
         }
-        
-        #visitsList::-webkit-scrollbar-thumb:hover {
-            background: #9932cc;
+        .visitor-list::-webkit-scrollbar-track {
+            background: transparent;
         }
-        
-        .logout-btn {
-            background: #ff5555 !important;
-            margin-top: 20px;
+        /* Floating audio button */
+        .audio-float-btn {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 999;
+            background: rgba(24,24,38,0.55);
+            border: 2px solid #8a2be2;
+            border-radius: 50%;
+            width: 58px;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 16px #8a2be277;
+            cursor: pointer;
+            transition: background 0.25s, box-shadow 0.25s;
         }
-        
-        .logout-btn:hover {
-            background: #ff3333 !important;
-            box-shadow: 0 0 10px #ff5555 !important;
+        .audio-float-btn:hover {
+            background: #8a2be2bb;
+            box-shadow: 0 0 22px #8a2be2;
+        }
+        .audio-float-btn .audio-icon {
+            font-size: 2em;
+            color: #fff;
+            filter: drop-shadow(0 0 4px #8a2be2cc);
+        }
+        @media (max-width: 600px) {
+            .visitor-list-wrap { padding: 12px 3vw 14px 3vw; }
+            .audio-float-btn { bottom: 12px; right: 12px; width: 44px; height: 44px; }
+            .audio-float-btn .audio-icon { font-size: 1.3em; }
         }
     </style>
 </head>
 <body>
-    <!-- Video Background -->
-    <video id="video-bg" autoplay muted loop>
-        <source src="https://files.catbox.moe/ns14gr.mp4" type="video/mp4">
-    </video>
-    <div class="overlay"></div>
-    
+    <!-- Floating Audio Button -->
+    <div class="audio-float-btn" id="audioBtn" title="Audio ON/OFF">
+        <span class="audio-icon" id="audioIcon">&#128264;</span>
+    </div>
+    <audio id="bgAudio" src="https://files.catbox.moe/y9xru7.mp3" loop preload="auto"></audio>
+
     <div class="login-form" id="loginForm">
         <h2>Admin Login</h2>
-        <input type="text" id="username" placeholder="Username"><br>
-        <input type="password" id="password" placeholder="Password"><br>
+        <input type="text" id="username" placeholder="Username" autocomplete="username">
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
         <button onclick="login()">Login</button>
         <p id="loginError" class="error"></p>
     </div>
-    
-    <div id="dataView">
-        <h2>Visitor Records</h2>
-        
+
+    <div class="visitor-list-wrap" id="dataView" style="display:none;">
+        <div class="visitor-list-title">Visitor Records</div>
         <div class="action-buttons">
             <button onclick="deleteSelected()">Delete Selected</button>
             <button onclick="deleteAll()" style="background: #ff5555;">Delete All</button>
         </div>
-        
-        <div id="visitsList"></div>
-        
+        <div class="visitor-list" id="visitsList"></div>
         <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
@@ -230,26 +261,22 @@
 
         // Fungsi login
         function login() {
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('loginError');
-            
+
             if (!username || !password) {
                 errorMsg.textContent = "Username and password required!";
                 return;
             }
-            
-            // Verifikasi admin
+
             db.ref('adminAccounts').orderByChild('username').equalTo(username).once('value')
                 .then(snapshot => {
                     const accounts = snapshot.val();
                     if (accounts) {
                         const accountId = Object.keys(accounts)[0];
                         const account = accounts[accountId];
-                        
-                        // Verifikasi password
                         if (account.password === password) {
-                            // Tampilkan data
                             document.getElementById('loginForm').style.display = 'none';
                             document.getElementById('dataView').style.display = 'block';
                             loadVisitorData();
@@ -262,33 +289,36 @@
                 });
         }
 
-        // Fungsi untuk memuat data pengunjung
+        // Fungsi untuk memuat data pengunjung ke list card
         function loadVisitorData() {
             db.ref('visits').on('value', (snapshot) => {
                 const visits = snapshot.val();
                 const container = document.getElementById('visitsList');
                 container.innerHTML = '';
-                
                 if (visits) {
-                    Object.keys(visits).forEach(key => {
+                    const keys = Object.keys(visits).sort(
+                        (a, b) => (visits[a].timestamp || 0) - (visits[b].timestamp || 0)
+                    );
+                    keys.forEach((key, idx) => {
                         const visit = visits[key];
                         const card = document.createElement('div');
                         card.className = 'visitor-card';
                         card.innerHTML = `
                             <input type="checkbox" class="checkbox" data-key="${key}">
-                            <p><strong>IP:</strong> ${visit.ip}</p>
-                            <p><strong>Location:</strong> ${visit.city}, ${visit.country}</p>
-                            <p><strong>User Agent:</strong> ${visit.userAgent}</p>
-                            <p><strong>Time:</strong> ${new Date(visit.timestamp).toLocaleString()}</p>
+                            <div class="info-row"><span class="no">#${idx + 1}</span></div>
+                            <div class="info-row"><span class="label">IP</span><span class="value">${visit.ip || '-'}</span></div>
+                            <div class="info-row"><span class="label">Location</span><span class="value">${visit.city || '-'}, ${visit.country || '-'}</span></div>
+                            <div class="info-row"><span class="label">User Agent</span><span class="value">${visit.userAgent || '-'}</span></div>
+                            <div class="info-row"><span class="label">Time</span><span class="value">${visit.timestamp ? new Date(visit.timestamp).toLocaleString() : '-'}</span></div>
                         `;
                         container.appendChild(card);
                     });
                 } else {
-                    container.innerHTML = "<p>No visitor data available</p>";
+                    container.innerHTML = `<div class="no-data-row">No visitor data available</div>`;
                 }
             });
         }
-        
+
         // Fungsi untuk logout
         function logout() {
             document.getElementById('loginForm').style.display = 'block';
@@ -296,8 +326,9 @@
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             document.getElementById('loginError').textContent = '';
+            db.ref('visits').off();
         }
-        
+
         // Fungsi untuk menghapus data terpilih
         function deleteSelected() {
             const checkboxes = document.querySelectorAll('.checkbox:checked');
@@ -305,7 +336,6 @@
                 alert('Please select at least one record to delete');
                 return;
             }
-            
             if (confirm(`Are you sure you want to delete ${checkboxes.length} selected records?`)) {
                 checkboxes.forEach(checkbox => {
                     const key = checkbox.getAttribute('data-key');
@@ -313,7 +343,7 @@
                 });
             }
         }
-        
+
         // Fungsi untuk menghapus semua data
         function deleteAll() {
             if (confirm('Are you sure you want to delete ALL records? This cannot be undone!')) {
@@ -322,6 +352,36 @@
                     .catch(error => alert('Error deleting records: ' + error.message));
             }
         }
+
+        // Floating Audio Button
+        const audioBtn = document.getElementById('audioBtn');
+        const audioIcon = document.getElementById('audioIcon');
+        const bgAudio = document.getElementById('bgAudio');
+        let audioOn = false;
+
+        // Icon Unicode: 🔊 (128266) for ON, 🔇 (128263) for OFF
+        audioBtn.onclick = () => {
+            audioOn = !audioOn;
+            if (audioOn) {
+                bgAudio.play();
+                audioIcon.innerHTML = "&#128266;"; // Speaker ON
+                audioBtn.title = "Audio ON";
+            } else {
+                bgAudio.pause();
+                audioIcon.innerHTML = "&#128263;"; // Speaker Muted
+                audioBtn.title = "Audio OFF";
+            }
+        };
+
+        // If user leaves page, pause audio
+        window.onblur = () => { if(bgAudio) bgAudio.pause(); }
+        window.onfocus = () => { if(audioOn) bgAudio.play(); }
+
+        // Prevent auto-play warning: require user interaction to start
+        document.addEventListener('DOMContentLoaded', function() {
+            audioIcon.innerHTML = "&#128263;";
+            audioBtn.title = "Audio OFF";
+        });
     </script>
 </body>
 </html>
